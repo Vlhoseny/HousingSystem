@@ -153,11 +153,104 @@ export const applicationsApi = {
 
 // Student Applications API
 export const studentApplicationsApi = {
-  submit: (application: FullFormDto) =>
-    apiFetch('/student/applications/submit', {
+  submit: (application: FullFormDto | any) => {
+    // Default template to fill empty fields
+    const defaults = {
+      studentType: 0,
+      studentInfo: {
+        studentId: 0,
+        nationalId: "string",
+        fullName: "string",
+        studentType: 0,
+        birthDate: "2026-01-20T21:25:06.669Z",
+        birthPlace: "string",
+        gender: "string",
+        religion: "string",
+        governorate: "string",
+        city: "string",
+        address: "string",
+        email: "string",
+        phone: "string",
+        faculty: "string",
+        department: "string",
+        level: "string",
+        fatherContactId: 0,
+        guardianContactId: 0,
+        userId: 0,
+      },
+      fatherInfo: {
+        contactId: 0,
+        fullName: "string",
+        nationalId: "string",
+        relation: "string",
+        job: "string",
+        phoneNumber: "string",
+        address: "string",
+      },
+      selectedGuardianRelation: "string",
+      otherGuardianInfo: {
+        contactId: 0,
+        fullName: "string",
+        nationalId: "string",
+        relation: "string",
+        job: "string",
+        phoneNumber: "string",
+        address: "string",
+      },
+      secondaryInfo: {
+        studentId: 0,
+        secondaryStream: "string",
+        totalScore: 0,
+        percentage: 0,
+        grade: "string",
+      },
+      academicInfo: {
+        studentId: 0,
+        currentGPA: 0,
+        lastYearGrade: "string",
+      },
+    } as any;
+
+    // Helper to merge defaults into target for empty values
+    const mergeDefaults = (target: any, def: any) => {
+      if (target == null) return JSON.parse(JSON.stringify(def));
+      // Only merge objects
+      if (typeof def !== 'object' || Array.isArray(def)) return target === undefined || target === null ? def : target;
+
+      const out: any = Array.isArray(def) ? [] : { ...target };
+      for (const key of Object.keys(def)) {
+        const tVal = target ? target[key] : undefined;
+        const dVal = def[key];
+
+        if (dVal && typeof dVal === 'object' && !Array.isArray(dVal)) {
+          out[key] = mergeDefaults(tVal, dVal);
+        } else {
+          // If tVal is undefined, null, or empty string, use default
+          if (tVal === undefined || tVal === null || (typeof tVal === 'string' && tVal.trim() === '')) {
+            out[key] = dVal;
+          } else {
+            out[key] = tVal;
+          }
+        }
+      }
+
+      // Preserve any extra properties present in target but not in defaults
+      if (target && typeof target === 'object') {
+        for (const key of Object.keys(target)) {
+          if (out[key] === undefined) out[key] = target[key];
+        }
+      }
+
+      return out;
+    };
+
+    const body = mergeDefaults(application ?? {}, defaults);
+
+    return apiFetch('/student/applications/submit', {
       method: 'POST',
-      body: JSON.stringify(application),
-    }),
+      body: JSON.stringify(body),
+    });
+  },
 
   getMyApplications: () =>
     apiFetch<ApplicationDetails[]>('/student/applications/my-applications'),
