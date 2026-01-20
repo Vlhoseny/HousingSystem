@@ -106,7 +106,13 @@ export const useBuildings = () => {
         queryFn: async () => {
             const response = await buildingsApi.getAll();
             if (response.error) throw new Error(response.error);
-            return response.data || [];
+            const payload: any = response.data;
+            if (Array.isArray(payload)) return payload as BuildingDto[];
+            if (payload && typeof payload === 'object' && 'data' in payload) {
+                const inner = (payload as any).data;
+                return Array.isArray(inner) ? (inner as BuildingDto[]) : [];
+            }
+            return [];
         },
     });
 };
@@ -117,7 +123,11 @@ export const useBuilding = (id: number) => {
         queryFn: async () => {
             const response = await buildingsApi.get(id);
             if (response.error) throw new Error(response.error);
-            return response.data;
+            const payload: any = response.data;
+            if (payload && typeof payload === 'object' && 'data' in payload) {
+                return (payload as any).data as BuildingDto;
+            }
+            return payload as BuildingDto;
         },
         enabled: !!id,
     });
