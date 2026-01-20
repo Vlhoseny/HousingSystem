@@ -5,6 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,11 +38,13 @@ import {
   Eye,
   Clock,
   DollarSign,
+  Loader2,
 } from 'lucide-react';
 import { usePayments, useApprovePayment, useRejectPayment } from '@/hooks/useApi';
+import { useToast } from '@/hooks/use-toast';
 
 // Use API hook for payments
-const noop = () => {};
+const noop = () => { };
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
@@ -45,7 +57,7 @@ function StatusBadge({ status }: { status: string }) {
     approved: 'مقبول',
     rejected: 'مرفوض',
   };
-  
+
   return (
     <Badge variant="outline" className={styles[status as keyof typeof styles]}>
       {labels[status] || status}
@@ -56,9 +68,11 @@ function StatusBadge({ status }: { status: string }) {
 export default function Payments() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'reject'; paymentId: number; studentName: string } | null>(null);
   const { data: paymentsResponse, isLoading: paymentsLoading } = usePayments();
   const approvePayment = useApprovePayment();
   const rejectPayment = useRejectPayment();
+  const { toast } = useToast();
 
   // Normalize API response which may be wrapped as { success, data: [...] }
   const _paymentsResp: any = paymentsResponse as any;
@@ -82,7 +96,47 @@ export default function Payments() {
   const totalApproved = payments
     .filter((p: any) => (p.status ?? '') === 'approved')
     .reduce((sum: number, p: any) => sum + (p.feeAmount ?? p.amount ?? 0), 0);
-  
+
+  // Handle approve action
+  const handleApprove = async () => {
+    if (!confirmAction || confirmAction.type !== 'approve') return;
+
+    try {
+      await approvePayment.mutateAsync(confirmAction.paymentId);
+      toast({
+        title: 'تم القبول',
+        description: 'تم قبول الدفعة بنجاح',
+      });
+      setConfirmAction(null);
+    } catch (err) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل قبول الدفعة',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Handle reject action
+  const handleReject = async () => {
+    if (!confirmAction || confirmAction.type !== 'reject') return;
+
+    try {
+      await rejectPayment.mutateAsync(confirmAction.paymentId);
+      toast({
+        title: 'تم الرفض',
+        description: 'تم رفض الدفعة بنجاح',
+      });
+      setConfirmAction(null);
+    } catch (err) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل رفض الدفعة',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -91,7 +145,7 @@ export default function Payments() {
           <h1 className="text-2xl font-bold text-foreground">المدفوعات</h1>
           <p className="text-muted-foreground">إدارة الرسوم والمعاملات</p>
         </div>
-        
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -109,7 +163,7 @@ export default function Payments() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -125,7 +179,7 @@ export default function Payments() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -141,7 +195,7 @@ export default function Payments() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -158,7 +212,7 @@ export default function Payments() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
@@ -172,7 +226,7 @@ export default function Payments() {
                   className="pr-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <Filter className="w-4 h-4 ml-2" />
@@ -188,7 +242,7 @@ export default function Payments() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Payments Table */}
         <Card>
           <CardContent className="p-0">
@@ -238,22 +292,22 @@ export default function Payments() {
                             </Button>
                             {status === 'pending' && (
                               <>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="text-success hover:text-success"
-                                              onClick={() => approvePayment.mutate(id)}
-                                              disabled={Boolean((approvePayment as any).isLoading)}
-                                            >
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-success hover:text-success"
+                                  onClick={() => setConfirmAction({ type: 'approve', paymentId: id, studentName })}
+                                  disabled={Boolean((approvePayment as any).isPending || (rejectPayment as any).isPending)}
+                                >
                                   <CheckCircle className="w-4 h-4" />
                                 </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="text-destructive hover:text-destructive"
-                                              onClick={() => rejectPayment.mutate(id)}
-                                              disabled={Boolean((rejectPayment as any).isLoading)}
-                                            >
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => setConfirmAction({ type: 'reject', paymentId: id, studentName })}
+                                  disabled={Boolean((approvePayment as any).isPending || (rejectPayment as any).isPending)}
+                                >
                                   <XCircle className="w-4 h-4" />
                                 </Button>
                               </>
@@ -269,6 +323,64 @@ export default function Payments() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Approve Confirmation Dialog */}
+      <AlertDialog open={confirmAction?.type === 'approve'} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد قبول الدفعة</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من قبول دفعة {confirmAction?.studentName}؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApprove}
+              disabled={approvePayment.isPending}
+              className="bg-success text-white hover:bg-success/90"
+            >
+              {approvePayment.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري القبول...
+                </>
+              ) : (
+                'تأكيد القبول'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Confirmation Dialog */}
+      <AlertDialog open={confirmAction?.type === 'reject'} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد رفض الدفعة</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رفض دفعة {confirmAction?.studentName}؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReject}
+              disabled={rejectPayment.isPending}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {rejectPayment.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الرفض...
+                </>
+              ) : (
+                'تأكيد الرفض'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
