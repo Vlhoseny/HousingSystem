@@ -106,13 +106,7 @@ export default function StudentApplications() {
       toast.error("يجب الموافقة على الإقرار للمتابعة");
       return;
     }
-
-    // Validate national ID length (max 14 characters)
-    if (nationalId && nationalId.length > 14) {
-      toast.error("يجب أن لا يزيد الرقم القومي عن 14 خانة");
-      return;
-    }
-
+    
     setIsSubmitting(true);
     
     try {
@@ -220,8 +214,7 @@ export default function StudentApplications() {
                     <Label className="text-sm font-medium">الرقم القومى</Label>
                     <Input
                       value={nationalId}
-                      onChange={(e) => setNationalId(e.target.value.slice(0, 14))}
-                      maxLength={14}
+                      onChange={(e) => setNationalId(e.target.value)}
                       className="text-right"
                       dir="ltr"
                       required
