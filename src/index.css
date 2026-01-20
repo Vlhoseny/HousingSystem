@@ -1,0 +1,274 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hurghada University Housing Management System Design System */
+
+@layer base {
+  :root {
+    /* Core University Colors from Logo */
+    --background: 210 20% 98%;
+    --foreground: 205 55% 23%;
+    
+    /* Card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 205 55% 23%;
+    
+    /* Popover surfaces */
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 55% 23%;
+    
+    /* Primary - Navy Blue from logo */
+    --primary: 205 55% 23%;
+    --primary-foreground: 48 100% 96%;
+    
+    /* Secondary - Teal/Turquoise from logo */
+    --secondary: 180 45% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted surfaces */
+    --muted: 210 25% 95%;
+    --muted-foreground: 205 20% 45%;
+    
+    /* Accent - Gold from logo sun */
+    --accent: 42 95% 48%;
+    --accent-foreground: 205 55% 15%;
+    
+    /* Destructive states */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 180 45% 50%;
+    
+    --radius: 0.75rem;
+    
+    /* Extended palette */
+    --ocean: 180 45% 50%;
+    --ocean-light: 180 50% 92%;
+    --ocean-dark: 180 50% 35%;
+    
+    --gold: 42 95% 48%;
+    --gold-light: 45 100% 92%;
+    --gold-dark: 40 90% 38%;
+    
+    --sunset: 25 85% 55%;
+    --sunset-light: 25 90% 92%;
+    
+    --navy: 205 55% 23%;
+    --navy-light: 205 45% 35%;
+    --navy-dark: 205 60% 15%;
+    
+    /* Status colors */
+    --success: 150 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 42 95% 48%;
+    --warning-foreground: 205 55% 15%;
+    --info: 200 80% 50%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Sidebar */
+    --sidebar-background: 205 55% 20%;
+    --sidebar-foreground: 48 100% 96%;
+    --sidebar-primary: 180 45% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 205 55% 28%;
+    --sidebar-accent-foreground: 48 100% 96%;
+    --sidebar-border: 205 45% 30%;
+    --sidebar-ring: 180 45% 50%;
+  }
+
+  .dark {
+    --background: 205 55% 8%;
+    --foreground: 48 100% 96%;
+    
+    --card: 205 50% 12%;
+    --card-foreground: 48 100% 96%;
+    
+    --popover: 205 50% 12%;
+    --popover-foreground: 48 100% 96%;
+    
+    --primary: 180 45% 50%;
+    --primary-foreground: 205 55% 10%;
+    
+    --secondary: 205 45% 25%;
+    --secondary-foreground: 48 100% 96%;
+    
+    --muted: 205 40% 18%;
+    --muted-foreground: 210 20% 65%;
+    
+    --accent: 42 95% 48%;
+    --accent-foreground: 205 55% 10%;
+    
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 205 40% 22%;
+    --input: 205 40% 22%;
+    --ring: 180 45% 50%;
+    
+    --sidebar-background: 205 55% 10%;
+    --sidebar-foreground: 48 100% 96%;
+    --sidebar-primary: 180 45% 50%;
+    --sidebar-primary-foreground: 205 55% 10%;
+    --sidebar-accent: 205 45% 18%;
+    --sidebar-accent-foreground: 48 100% 96%;
+    --sidebar-border: 205 40% 18%;
+    --sidebar-ring: 180 45% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    direction: rtl;
+    text-align: right;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
+  }
+}
+
+@layer components {
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-md border border-white/10;
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-university {
+    background: linear-gradient(135deg, hsl(205 55% 23%) 0%, hsl(180 45% 40%) 100%);
+  }
+  
+  .bg-gradient-ocean {
+    background: linear-gradient(135deg, hsl(180 45% 50%) 0%, hsl(200 60% 45%) 100%);
+  }
+  
+  .bg-gradient-sunset {
+    background: linear-gradient(135deg, hsl(42 95% 48%) 0%, hsl(25 85% 55%) 100%);
+  }
+  
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, hsl(205 55% 20%) 0%, hsl(205 55% 30%) 50%, hsl(180 45% 40%) 100%);
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+  }
+  
+  /* Stat card styles */
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl p-6 bg-card border shadow-sm card-hover;
+  }
+  
+  .stat-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-1 h-full;
+  }
+  
+  .stat-card-primary::before {
+    @apply bg-primary;
+  }
+  
+  .stat-card-secondary::before {
+    background: hsl(var(--ocean));
+  }
+  
+  .stat-card-accent::before {
+    background: hsl(var(--gold));
+  }
+  
+  .stat-card-warning::before {
+    background: hsl(var(--sunset));
+  }
+  
+  /* Wave pattern overlay */
+  .wave-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%234db8b8' fill-opacity='0.1' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-size: cover;
+    background-position: bottom;
+  }
+}
+
+@layer utilities {
+  /* Text gradient */
+  .text-gradient-university {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(205 55% 23%) 0%, hsl(180 45% 50%) 100%);
+  }
+  
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(42 95% 48%) 0%, hsl(25 85% 55%) 100%);
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Delayed animations */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+}
