@@ -72,19 +72,6 @@ const extractFloor = (roomNumber: string | null): number => {
   return match ? Math.floor(parseInt(match[1]) / 100) : 1;
 };
 
-// Helper function to extract building from roomNumber and buildingId
-const getBuildingName = (roomNumber: string | null, buildingId: number): string => {
-  if (!roomNumber) return `Building ${buildingId}`;
-  const buildingLetter = roomNumber.charAt(0);
-  const buildingNames: Record<string, string> = {
-    'A': 'Building A - Male',
-    'B': 'Building B - Male',
-    'C': 'Building C - Female',
-    'D': 'Building D - Female',
-  };
-  return buildingNames[buildingLetter] || `Building ${buildingId}`;
-};
-
 function StatusBadge({ status }: { status: string }) {
   const styles = {
     available: 'bg-success/10 text-success border-success/20',
@@ -134,7 +121,7 @@ export default function Rooms() {
   const rooms = apiRooms.map(room => ({
     id: room.roomId,
     roomNumber: room.roomNumber || '',
-    building: getBuildingName(room.roomNumber, room.buildingId),
+    building: room.buildingName || `Building ${room.buildingId}`,
     floor: extractFloor(room.roomNumber),
     capacity: room.capacity,
     currentOccupancy: room.currentOccupancy,
