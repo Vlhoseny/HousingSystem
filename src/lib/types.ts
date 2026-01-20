@@ -107,6 +107,7 @@ export interface RoomDto {
     capacity: number;
     currentOccupancy: number;
     buildingId: number;
+    buildingName?: string | null;
     apartmentName: string | null;
     status: number;
 }

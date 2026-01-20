@@ -30,81 +30,26 @@ import {
   Building2,
 } from 'lucide-react';
 
-// Mock data
-const rooms = [
-  { 
-    id: 1, 
-    roomNumber: 'A-101',
-    building: 'Building A - Male',
-    floor: 1,
-    capacity: 4,
-    currentOccupancy: 4,
-    status: 'full'
-  },
-  { 
-    id: 2, 
-    roomNumber: 'A-102',
-    building: 'Building A - Male',
-    floor: 1,
-    capacity: 4,
-    currentOccupancy: 3,
-    status: 'available'
-  },
-  { 
-    id: 3, 
-    roomNumber: 'A-103',
-    building: 'Building A - Male',
-    floor: 1,
-    capacity: 4,
-    currentOccupancy: 4,
-    status: 'full'
-  },
-  { 
-    id: 4, 
-    roomNumber: 'B-201',
-    building: 'Building B - Male',
-    floor: 2,
-    capacity: 4,
-    currentOccupancy: 2,
-    status: 'available'
-  },
-  { 
-    id: 5, 
-    roomNumber: 'B-202',
-    building: 'Building B - Male',
-    floor: 2,
-    capacity: 4,
-    currentOccupancy: 0,
-    status: 'maintenance'
-  },
-  { 
-    id: 6, 
-    roomNumber: 'C-301',
-    building: 'Building C - Female',
-    floor: 3,
-    capacity: 4,
-    currentOccupancy: 4,
-    status: 'full'
-  },
-  { 
-    id: 7, 
-    roomNumber: 'C-302',
-    building: 'Building C - Female',
-    floor: 3,
-    capacity: 4,
-    currentOccupancy: 1,
-    status: 'available'
-  },
-  { 
-    id: 8, 
-    roomNumber: 'D-101',
-    building: 'Building D - Female',
-    floor: 1,
-    capacity: 2,
-    currentOccupancy: 2,
-    status: 'full'
-  },
-];
+// Helper function to map status code to status string
+const getStatusFromCode = (statusCode: number): 'available' | 'full' | 'maintenance' => {
+  switch (statusCode) {
+    case 0:
+      return 'available';
+    case 1:
+      return 'full';
+    case 2:
+      return 'maintenance';
+    default:
+      return 'available';
+  }
+};
+
+// Helper function to extract floor from room number
+const extractFloor = (roomNumber: string | null): number => {
+  if (!roomNumber) return 1;
+  const match = roomNumber.match(/^[A-D]-(\d+)/);
+  return match ? Math.floor(parseInt(match[1]) / 100) : 1;
+};
 
 function StatusBadge({ status }: { status: string }) {
   const styles = {
@@ -130,9 +75,39 @@ export default function Rooms() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [buildingFilter, setBuildingFilter] = useState('all');
-  
-  const buildings = [...new Set(rooms.map(r => r.building))];
-  
+  const [editingRoom, setEditingRoom] = useState<any>(null);
+  const [deletingRoomId, setDeletingRoomId] = useState<number | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({ capacity: '', currentOccupancy: '', status: '0' });
+  const [addFormData, setAddFormData] = useState({
+    roomNumber: '',
+    capacity: '',
+    currentOccupancy: '',
+    buildingId: '',
+    apartmentName: '',
+    status: '0',
+  });
+
+  // API hooks
+  const { data: apiRooms = [], isLoading, error } = useRooms();
+  const { data: buildings = [] } = useBuildings();
+  const updateMutation = useUpdateRoom();
+  const deleteMutation = useDeleteRoom();
+  const createMutation = useCreateRoom();
+  const { toast } = useToast();
+
+  // Transform API data to component format
+  const rooms = apiRooms.map(room => ({
+    id: room.roomId,
+    roomNumber: room.roomNumber || '',
+    building: room.buildingName || `Building ${room.buildingId}`,
+    floor: extractFloor(room.roomNumber),
+    capacity: room.capacity,
+    currentOccupancy: room.currentOccupancy,
+    status: getStatusFromCode(room.status),
+    roomData: room, // Keep original API data
+  }));
+
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || room.status === statusFilter;

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { complaintsApi } from '@/lib/api';
+import { useResolveComplaint } from '@/hooks/useApi';
 
 
 type UIComplaint = {
@@ -46,7 +47,7 @@ function PriorityBadge({ priority }: { priority: string }) {
     medium: 'أولوية متوسطة',
     low: 'أولوية منخفضة',
   };
-  
+
   return (
     <Badge variant="outline" className={styles[priority as keyof typeof styles]}>
       {labels[priority] || priority}
@@ -63,7 +64,7 @@ function StatusBadge({ status }: { status: string }) {
     unresolved: 'مفتوحة',
     resolved: 'تم حلها',
   };
-  
+
   return (
     <Badge variant="outline" className={styles[status as keyof typeof styles]}>
       {labels[status] || status}
@@ -75,6 +76,37 @@ export default function Complaints() {
   const [selectedComplaint, setSelectedComplaint] = useState<UIComplaint | null>(null);
   const [resolutionText, setResolutionText] = useState('');
   const [allComplaints, setAllComplaints] = useState<UIComplaint[]>([]);
+  const resolveMutation = useResolveComplaint();
+
+  const handleResolve = async () => {
+    if (!selectedComplaint || !resolutionText.trim()) {
+      toast.error('الرجاء إدخال رسالة الحل');
+      return;
+    }
+
+    try {
+      await resolveMutation.mutateAsync({
+        complaintId: selectedComplaint.complaintId,
+        resolutionMessage: resolutionText,
+      });
+
+      toast.success('تم حل الشكوى بنجاح');
+
+      // Update local state
+      setAllComplaints(prev =>
+        prev.map(c =>
+          c.complaintId === selectedComplaint.complaintId
+            ? { ...c, status: 'resolved', resolution: resolutionText }
+            : c
+        )
+      );
+
+      setResolutionText('');
+      setSelectedComplaint(null);
+    } catch (err) {
+      toast.error('فشل في حل الشكوى');
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -122,7 +154,7 @@ export default function Complaints() {
 
   const unresolvedComplaints = allComplaints.filter((c) => c.status === 'unresolved');
   const resolvedComplaints = allComplaints.filter((c) => c.status === 'resolved');
-  
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -131,7 +163,7 @@ export default function Complaints() {
           <h1 className="text-2xl font-bold text-foreground">الشكاوى</h1>
           <p className="text-muted-foreground">إدارة شكاوى ومشكلات الطلاب</p>
         </div>
-        
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -147,7 +179,7 @@ export default function Complaints() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -161,7 +193,7 @@ export default function Complaints() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -177,7 +209,7 @@ export default function Complaints() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -192,7 +224,7 @@ export default function Complaints() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Complaints List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Unresolved */}
@@ -210,7 +242,7 @@ export default function Complaints() {
                 </p>
               ) : (
                 unresolvedComplaints.map((complaint) => (
-                  <div 
+                  <div
                     key={complaint.complaintId}
                     className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => setSelectedComplaint(complaint)}
@@ -237,7 +269,7 @@ export default function Complaints() {
               )}
             </CardContent>
           </Card>
-          
+
           {/* Resolved */}
           <Card>
             <CardHeader>
@@ -253,7 +285,7 @@ export default function Complaints() {
                 </p>
               ) : (
                 resolvedComplaints.map((complaint) => (
-                  <div 
+                  <div
                     key={complaint.complaintId}
                     className="p-4 rounded-lg border bg-muted/30 cursor-pointer"
                     onClick={() => setSelectedComplaint(complaint)}
@@ -281,7 +313,7 @@ export default function Complaints() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Complaint Details Dialog */}
         <Dialog open={!!selectedComplaint} onOpenChange={() => setSelectedComplaint(null)}>
           <DialogContent className="max-w-lg">
@@ -291,36 +323,36 @@ export default function Complaints() {
                 مراجعة والرد على الشكوى
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedComplaint && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <PriorityBadge priority={selectedComplaint.priority} />
                   <StatusBadge status={selectedComplaint.status} />
                 </div>
-                
+
                 <div>
                   <h4 className="font-semibold text-lg">{selectedComplaint.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
                     من: {selectedComplaint.studentName} • الغرفة {selectedComplaint.room}
                   </p>
                 </div>
-                
+
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm">{selectedComplaint.message}</p>
                 </div>
-                
+
                 <div className="text-xs text-muted-foreground">
                   التاريخ: {new Date(selectedComplaint.createdAt).toLocaleString()}
                 </div>
-                
+
                 {selectedComplaint.status === 'resolved' && selectedComplaint.resolution && (
                   <div className="p-4 bg-success/10 rounded-lg border border-success/20">
                     <p className="text-sm font-medium text-success mb-1">Resolution</p>
                     <p className="text-sm">{selectedComplaint.resolution}</p>
                   </div>
                 )}
-                
+
                 {selectedComplaint.status === 'unresolved' && (
                   <div className="space-y-3 pt-4 border-t">
                     <Textarea
@@ -328,10 +360,15 @@ export default function Complaints() {
                       value={resolutionText}
                       onChange={(e) => setResolutionText(e.target.value)}
                       rows={3}
+                      disabled={resolveMutation.isPending}
                     />
-                    <Button className="w-full bg-success hover:bg-success/90">
+                    <Button
+                      className="w-full bg-success hover:bg-success/90"
+                      onClick={handleResolve}
+                      disabled={resolveMutation.isPending || !resolutionText.trim()}
+                    >
                       <CheckCircle className="w-4 h-4 ml-2" />
-                      تمييز كمحلول
+                      {resolveMutation.isPending ? 'جاري الحل...' : 'تمييز كمحلول'}
                     </Button>
                   </div>
                 )}
